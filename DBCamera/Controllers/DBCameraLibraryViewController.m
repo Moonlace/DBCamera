@@ -334,29 +334,36 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 
         __weak typeof(self) weakSelf = self;
         [[[DBLibraryManager sharedInstance] defaultAssetsLibrary] assetForURL:URL resultBlock:^(ALAsset *asset) {
-            ALAssetRepresentation *defaultRep = [asset defaultRepresentation];
-            NSMutableDictionary *metadata = [NSMutableDictionary dictionaryWithDictionary:[defaultRep metadata]];
-            metadata[@"DBCameraSource"] = @"Library";
             
-            UIImage *image = [UIImage imageForAsset:asset maxPixelSize:_libraryMaxImageSize];
-            
-            if ( !weakSelf.useCameraSegue ) {
-                if ( [weakSelf.delegate respondsToSelector:@selector(camera:didFinishWithImage:withMetadata:)] )
-                    [weakSelf.delegate camera:self didFinishWithImage:image withMetadata:metadata];
-            } else {
-                DBCameraSegueViewController *segue = [[DBCameraSegueViewController alloc] initWithImage:image thumb:[UIImage imageWithCGImage:[asset aspectRatioThumbnail]]];
-                [segue setTintColor:self.tintColor];
-                [segue setSelectedTintColor:self.selectedTintColor];
-                [segue setForceQuadCrop:_forceQuadCrop];
-                [segue enableGestures:YES];
-                [segue setCapturedImageMetadata:metadata];
-                [segue setDelegate:weakSelf.delegate];
-                [segue setCameraSegueConfigureBlock:self.cameraSegueConfigureBlock];
+            ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+            [library assetForURL:URL resultBlock:^(ALAsset *asset)  {
                 
-                [weakSelf.navigationController pushViewController:segue animated:YES];
-            }
-            
-            [weakSelf.loading removeFromSuperview];
+                ALAssetRepresentation *defaultRep = [asset defaultRepresentation];
+                NSMutableDictionary *metadata = [NSMutableDictionary dictionaryWithDictionary:[defaultRep metadata]];
+                metadata[@"DBCameraSource"] = @"Library";
+                metadata[@"DBImageName"] = asset.defaultRepresentation.filename;
+                
+                UIImage *image = [UIImage imageForAsset:asset maxPixelSize:_libraryMaxImageSize];
+                
+                if ( !weakSelf.useCameraSegue ) {
+                    if ( [weakSelf.delegate respondsToSelector:@selector(camera:didFinishWithImage:withMetadata:)] )
+                        [weakSelf.delegate camera:self didFinishWithImage:image withMetadata:metadata];
+                } else {
+                    DBCameraSegueViewController *segue = [[DBCameraSegueViewController alloc] initWithImage:image thumb:[UIImage imageWithCGImage:[asset aspectRatioThumbnail]]];
+                    [segue setTintColor:self.tintColor];
+                    [segue setSelectedTintColor:self.selectedTintColor];
+                    [segue setForceQuadCrop:_forceQuadCrop];
+                    [segue enableGestures:YES];
+                    [segue setCapturedImageMetadata:metadata];
+                    [segue setDelegate:weakSelf.delegate];
+                    [segue setCameraSegueConfigureBlock:self.cameraSegueConfigureBlock];
+                    
+                    [weakSelf.navigationController pushViewController:segue animated:YES];
+                }
+                
+                [weakSelf.loading removeFromSuperview];
+                
+            } failureBlock:nil];
         } failureBlock:nil];
     });
 }

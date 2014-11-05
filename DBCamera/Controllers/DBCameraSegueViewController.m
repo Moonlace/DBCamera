@@ -67,6 +67,11 @@ static const CGSize kFilterCellSize = { 75, 90 };
         [self setMinimumScale:.2];
         [self setMaximumScale:10];
         [self createInterface];
+        
+#warning this library should be extended
+        [self.cropButton setHidden:YES];
+        [self actionSheet:nil clickedButtonAtIndex:3];
+        [_cropView setHidden:NO];
     }
     return self;
 }
@@ -82,7 +87,6 @@ static const CGSize kFilterCellSize = { 75, 90 };
     CGFloat cropX = ( CGRectGetWidth( self.frameView.frame) - 320 ) * .5;
     _pFrame = (CGRect){ cropX, ( CGRectGetHeight( self.frameView.frame) - 360 ) * .5, 320, 320 };
     _lFrame = (CGRect){ cropX, ( CGRectGetHeight( self.frameView.frame) - 240) * .5, 320, 240 };
-    
     [self setCropRect:self.previewImage.size.width > self.previewImage.size.height ? _lFrame : _pFrame];
     
     [self.view addSubview:self.filtersView];
@@ -147,12 +151,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
 - (void) saveImage
 {
     if ( [_delegate respondsToSelector:@selector(camera:didFinishWithImage:withMetadata:)] ) {
-        if ( _cropMode )
-            [self cropImage];
-        else {
-            UIImage *transform = [_filterMapping[@(_selectedFilterIndex.row)] imageByFilteringImage:self.sourceImage];
-            [_delegate camera:self didFinishWithImage:transform withMetadata:self.capturedImageMetadata];
-        }
+        [self cropImage];
     }
 }
 
@@ -179,12 +178,8 @@ static const CGSize kFilterCellSize = { 75, 90 };
 {
     _cropMode = cropMode;
     [self.frameView setHidden:!_cropMode];
-    
-    // Only hide filters if quad crop is not forced, otherwise filters are not accessible
-    if (!_forceQuadCrop) {
-        [self.bottomBar setHidden:!_cropMode];
-        [self.filtersView setHidden:_cropMode];
-    }
+    [self.bottomBar setHidden:!_cropMode];
+    [self.filtersView setHidden:_cropMode];
 }
 
 - (DBCameraFiltersView *) filtersView
@@ -332,18 +327,16 @@ static const CGSize kFilterCellSize = { 75, 90 };
     _selectedFilterIndex = indexPath;
     [self.filtersView reloadData];
     
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIImage *filteredImage = [_filterMapping[@(indexPath.row)] imageByFilteringImage:self.sourceImage];
-        [self.loadingView removeFromSuperview];
-        [self.imageView setImage:filteredImage];
-    });
+    UIImage *filteredImage = [_filterMapping[@(indexPath.row)] imageByFilteringImage:self.sourceImage];
+    [self.loadingView removeFromSuperview];
+    [self.imageView setImage:filteredImage];
 }
 
 #pragma mark - UIActionSheetDelegate
 
 - (void) actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-    if ( buttonIndex != actionSheet.cancelButtonIndex ) {
+    if (!actionSheet || buttonIndex != actionSheet.cancelButtonIndex ) {
         NSUInteger height = [_cropArray[buttonIndex] integerValue];
         CGFloat cropX = ( CGRectGetWidth( self.frameView.frame) - 320 ) * .5;
         CGRect cropRect = (CGRect){ cropX, ( CGRectGetHeight( self.frameView.frame) - (CGRectGetHeight(self.bottomBar.frame) + height) ) * .5, 320, height };

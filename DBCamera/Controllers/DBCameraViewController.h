@@ -10,7 +10,6 @@
 #import "DBCameraDelegate.h"
 #import "UIViewController+UIViewController_FullScreen.h"
 
-@class DBCameraManager;
 @class DBCameraView;
 @class DBCameraGridView;
 @class DBCameraSegueViewController;
@@ -28,11 +27,6 @@
  *  An id object compliant with the DBCameraContainerDelegate
  */
 @property (nonatomic, weak) id <DBCameraContainerDelegate> containerDelegate;
-
-/**
- *  The camera manager object
- */
-@property (nonatomic, strong, readonly) DBCameraManager *cameraManager;
 
 /**
  *  The BOOL value to set if the view controller will have a DBCameraSegueViewController

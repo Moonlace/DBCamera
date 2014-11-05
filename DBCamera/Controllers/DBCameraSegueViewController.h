@@ -55,4 +55,6 @@
  *  Create the interface of the view controller
  */
 - (void) createInterface;
+
+- (void) createInterfaceWithFrame:(CGRect)frame;
 @end
