@@ -60,27 +60,7 @@
         } else
             [_previewLayer setFrame:self.bounds];
         
-        if ( [_previewLayer respondsToSelector:@selector(connection)] ) {
-            if ( [_previewLayer.connection isVideoOrientationSupported] )
-                
-            switch ([UIDevice currentDevice].orientation)
-            {
-                case UIInterfaceOrientationPortrait:
-                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
-                    break;
-                case UIInterfaceOrientationLandscapeRight:
-                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeRight];
-                    break;
-                case UIInterfaceOrientationLandscapeLeft:
-                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft];
-                    break;
-                default:
-                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortraitUpsideDown];
-                    break;
-            }
-            
-            //                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft];
-        }
+        [self setpreviewLayerVideoOrientation];
         
         [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
         
@@ -88,9 +68,45 @@
         
         self.tintColor = [UIColor whiteColor];
         self.selectedTintColor = [UIColor redColor];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self  selector:@selector(orientationChanged:)    name:UIDeviceOrientationDidChangeNotification  object:nil];
     }
     
     return self;
+}
+
+- (void)setpreviewLayerVideoOrientation {
+    
+    
+    if ( [_previewLayer respondsToSelector:@selector(connection)] ) {
+        if ( [_previewLayer.connection isVideoOrientationSupported] )
+            
+            switch ([[UIApplication sharedApplication] statusBarOrientation])
+        {
+            case UIInterfaceOrientationPortrait:
+                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeRight];
+                break;
+            case UIInterfaceOrientationLandscapeLeft:
+                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft];
+                break;
+            default:
+                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortraitUpsideDown];
+                break;
+        }
+    }
+}
+
+- (void)orientationChanged:(NSNotification *)notification{
+    
+    [self setpreviewLayerVideoOrientation];
+}
+
+- (void)dealloc {
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void) defaultInterface
