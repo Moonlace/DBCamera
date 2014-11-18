@@ -18,4 +18,7 @@
  */
 #define IS_RETINA_4 ( [[UIScreen mainScreen] respondsToSelector:@selector(scale)] && [[UIScreen mainScreen] scale] == 2 && [[UIScreen mainScreen] bounds].size.height > 480)
 
+#define IDIOM    UI_USER_INTERFACE_IDIOM()
+#define IS_IPAD     UIUserInterfaceIdiomPad
+
 #endif

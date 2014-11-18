@@ -16,6 +16,7 @@
 
 #define previewFrameRetina (CGRect){ 0, 65, 320, 342 }
 #define previewFrameRetina_4 (CGRect){ 0, 65, 320, 430 }
+#define previewFrameIpad (CGRect){ 0, 65, 1024, 630 }
 
 // pinch
 #define MAX_PINCH_SCALE_NUM   3.f
@@ -55,13 +56,30 @@
         _previewLayer = [[AVCaptureVideoPreviewLayer alloc] init];
         if ( captureSession ) {
             [_previewLayer setSession:captureSession];
-            [_previewLayer setFrame: IS_RETINA_4 ? previewFrameRetina_4 : previewFrameRetina ];
+            [_previewLayer setFrame: IS_IPAD ? previewFrameIpad : IS_RETINA_4 ? previewFrameRetina_4 : previewFrameRetina ];
         } else
             [_previewLayer setFrame:self.bounds];
         
         if ( [_previewLayer respondsToSelector:@selector(connection)] ) {
             if ( [_previewLayer.connection isVideoOrientationSupported] )
-                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+                
+            switch ([UIDevice currentDevice].orientation)
+            {
+                case UIInterfaceOrientationPortrait:
+                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+                    break;
+                case UIInterfaceOrientationLandscapeRight:
+                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeRight];
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft];
+                    break;
+                default:
+                    [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationPortraitUpsideDown];
+                    break;
+            }
+            
+            //                [_previewLayer.connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft];
         }
         
         [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
@@ -106,7 +124,7 @@
 - (UIView *) topContainerBar
 {
     if ( !_topContainerBar ) {
-        _topContainerBar = [[UIView alloc] initWithFrame:(CGRect){ 0, 0, CGRectGetWidth(self.bounds), CGRectGetMinY(IS_RETINA_4 ? previewFrameRetina_4 : previewFrameRetina) }];
+        _topContainerBar = [[UIView alloc] initWithFrame:(CGRect){ 0, 0, CGRectGetWidth(self.bounds), CGRectGetMinY(IS_IPAD ? previewFrameIpad : IS_RETINA_4 ? previewFrameRetina_4 : previewFrameRetina) }];
         [_topContainerBar setBackgroundColor:RGBColor(0x000000, 1)];
     }
     return _topContainerBar;
@@ -115,7 +133,7 @@
 - (UIView *) bottomContainerBar
 {
     if ( !_bottomContainerBar ) {
-        CGFloat newY = CGRectGetMaxY( IS_RETINA_4 ? previewFrameRetina_4 : previewFrameRetina );
+        CGFloat newY = CGRectGetMaxY(IS_IPAD ? previewFrameIpad : IS_RETINA_4 ? previewFrameRetina_4 : previewFrameRetina );
         _bottomContainerBar = [[UIView alloc] initWithFrame:(CGRect){ 0, newY, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) - newY }];
         [_bottomContainerBar setUserInteractionEnabled:YES];
         [_bottomContainerBar setBackgroundColor:RGBColor(0x000000, 1)];
@@ -406,18 +424,18 @@
 - (void) handlePinch:(UIPinchGestureRecognizer *)pinchGestureRecognizer
 {
     BOOL allTouchesAreOnThePreviewLayer = YES;
-	NSUInteger numTouches = [pinchGestureRecognizer numberOfTouches], i;
-	for ( i = 0; i < numTouches; ++i ) {
-		CGPoint location = [pinchGestureRecognizer locationOfTouch:i inView:self];
-		CGPoint convertedLocation = [_previewLayer convertPoint:location fromLayer:_previewLayer.superlayer];
-		if ( ! [_previewLayer containsPoint:convertedLocation] ) {
-			allTouchesAreOnThePreviewLayer = NO;
-			break;
-		}
-	}
-	
-	if ( allTouchesAreOnThePreviewLayer ) {
-		_scaleNum = _preScaleNum * pinchGestureRecognizer.scale;
+    NSUInteger numTouches = [pinchGestureRecognizer numberOfTouches], i;
+    for ( i = 0; i < numTouches; ++i ) {
+        CGPoint location = [pinchGestureRecognizer locationOfTouch:i inView:self];
+        CGPoint convertedLocation = [_previewLayer convertPoint:location fromLayer:_previewLayer.superlayer];
+        if ( ! [_previewLayer containsPoint:convertedLocation] ) {
+            allTouchesAreOnThePreviewLayer = NO;
+            break;
+        }
+    }
+    
+    if ( allTouchesAreOnThePreviewLayer ) {
+        _scaleNum = _preScaleNum * pinchGestureRecognizer.scale;
         
         if ( _scaleNum < MIN_PINCH_SCALE_NUM )
             _scaleNum = MIN_PINCH_SCALE_NUM;
@@ -428,7 +446,7 @@
             [self.delegate cameraCaptureScale:_scaleNum];
         
         [self doPinch];
-	}
+    }
     
     if ( [pinchGestureRecognizer state] == UIGestureRecognizerStateEnded ||
         [pinchGestureRecognizer state] == UIGestureRecognizerStateCancelled ||

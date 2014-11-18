@@ -1,4 +1,4 @@
-//
+ //
 //  DBCameraManager.m
 //  DBCamera
 //
@@ -108,7 +108,7 @@
     AVCaptureConnection *videoConnection = [DBCameraManager connectionWithMediaType:AVMediaTypeVideo fromConnections:_stillImageOutput.connections];
     
     if ( [videoConnection isVideoOrientationSupported] ) {
-        switch (deviceOrientation) {
+        switch ([UIDevice currentDevice].orientation) {
             case UIDeviceOrientationPortraitUpsideDown:
                 [videoConnection setVideoOrientation:AVCaptureVideoOrientationPortraitUpsideDown];
                 break;

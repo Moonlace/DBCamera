@@ -223,9 +223,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 
 - (void) rotationChanged:(UIDeviceOrientation) orientation
 {
-    if ( orientation != UIDeviceOrientationUnknown ||
-        orientation != UIDeviceOrientationFaceUp ||
-        orientation != UIDeviceOrientationFaceDown ) {
+    if ( orientation != UIDeviceOrientationUnknown ) {
         _deviceOrientation = orientation;
     }
 }
